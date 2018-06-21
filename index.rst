@@ -20,37 +20,37 @@ Reactors extends the Abaco Actors concept with:
    :maxdepth: 2
    :caption: Quick Start
 
-   quickstart/index
+   src/quickstart/index
 
 .. toctree::
    :maxdepth: 2
    :caption: User Guide
 
-   user_guide/index
+   src/user_guide/index
 
 .. toctree::
    :maxdepth: 2
    :caption: Scenarios
 
-   scenarios/index
+   src/scenarios/index
 
 .. toctree::
    :maxdepth: 2
    :caption: Resources
 
-   resources/index
+   src/resources/index
 
 .. toctree::
    :maxdepth: 2
    :caption: Porting
 
-   porting/index
+   src/porting/index
 
 .. toctree::
    :maxdepth: 2
    :caption: Contributing
 
-   contribute/index
+   src/contribute/index
 
 Indices and tables
 ==================
