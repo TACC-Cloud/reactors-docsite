@@ -17,37 +17,37 @@ Reactors extends the Abaco Actors concept with:
 - Optimized TACC.cloud API operations
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Quick Start
 
    src/quickstart/index
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: User Guide
 
    src/user_guide/index
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Scenarios
 
    src/scenarios/index
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Resources
 
    src/resources/index
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Porting
 
    src/porting/index
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contributing
 
    src/contribute/index

@@ -1,0 +1,11 @@
+Reactor
+=======
+
+**Concept:** A Reactor object has attributes that directly reflect the current Abaco context, attributes that provide linkages to a couple of other handy encapsulations, and some helper functions that provide or require an Agave API client. Critically, an instance of `Reactor` can be invoked outside the Abaco execution environment and will be populated with mock (but valid-y) attribute values and helper functions for working with TACC APIs initialized with the user's own credentials.
+
+.. toctree::
+   :maxdepth: 3
+
+   attributes
+   functions
+   assistants
