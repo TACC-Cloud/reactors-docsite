@@ -1,7 +1,7 @@
 Attributes
 ==========
 
-Every Reactor has the following attributes, built from either the Reactor's execution environment or by some clever mocking code when run in localized environments:
+Every Reactor has the following attributes, built from either the Reactor's execution environment or by means of some clever mocking code in a local test environment:
 
 +----------+-----------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
 | name     | type                              | contents                                                                                                                                                     | source                                                                                                          |
@@ -40,8 +40,8 @@ aliases
 
 This is an instance of ``AliasStore`` with which one can create, get, remove, and share alias entries for any actor. See AliasStore documentation for details.
 
-Example
-^^^^^^^
+Example Usage
+^^^^^^^^^^^^^
 
 .. code-block:: pycon
    :caption: Get an alias
@@ -64,10 +64,10 @@ Example
 client
 ------
 
-This is an active AgavePy API which is used to make authenticated API calls on behalf of the user that invoked execution of the Reactor. All AgavePy functions are supported.
+This is an active AgavePy API client used to make authenticated API calls on behalf of the user that invoked execution of the Reactor. All AgavePy functions are supported.
 
-Example
-^^^^^^^
+Example Usage
+^^^^^^^^^^^^^
 
 .. code-block:: pycon
    :caption: List available public apps
@@ -88,6 +88,9 @@ context
 
 This is a dictionary populated from environment variables passed to the container by Abaco.
 
+Example Usage
+^^^^^^^^^^^^^
+
 .. code-block:: pycon
    :caption: An example context
 
@@ -103,27 +106,171 @@ Context combines environment variables inherited from the container image, set i
 
  - **message_dict** is populated by parsing a JSON message passed to the actor into a Python dictionary. This is done automatically and safely via Pythons `ast` and `json.loads` functions. If a message can't be parsed, message_dict is set to an empty ``AttrDict``. If you believe you're sending valid JSON but it's not resolving as a dictionary, ``context.raw_message_parse_log`` can be inspected for clues to what is causing the failure.
 
-
 execid
 ------
+
+This is the unique identifier for the current execution.
+
+Example Usage
+^^^^^^^^^^^^^
+
+.. code-block:: pycon
+   :caption: Get the execution identifier
+
+    >>> r = Reactor()
+    >>> print(r.execid)
+    ePmJlZOg0W03
 
 local
 -----
 
+This is a boolean value set based on the state of the `LOCALONLY` environment variable. It is intended to be used to selectively disable or enable code branches when running under local emulation.
+
+.. code-block:: python
+   :caption: An environment-specific ``print()`` statement
+
+    r = Reactor()
+    if r.local is not True:
+        print('This code is not running under a test environment')
+    else:
+        print('This code is running locally')
+
+The state of ``local`` is set automatically by some CI support scripts, and can be set in a pytest environment using the `monkeypatch <https://docs.pytest.org/en/latest/monkeypatch.html>`_ fixture.
+
+.. code-block:: python
+   :caption: Monkeypatching local to return ``True``
+
+    def test_demo_local(monkeypatch):
+        monkeypatch.setenv('LOCALONLY', 1)
+        r = Reactor()
+        assert r.local is True
+
 logger
 ------
+
+This is an ready-to-use Python logger.
+
+Example Usage
+^^^^^^^^^^^^^
+
+.. code-block:: pycon
+   :caption: Get the execution identifier
+
+    >>> r = Reactor()
+    >>> r.logger.info('This is a log message')
+    5AB11Q8XxwPK5 INFO This is a log message
+
+A nicely formatted message is printed to ``STDERR`` that includes the current actor ID. All logging levels (debug, info, warning, critical) are available. Logging level is set in the ``logs`` stanza of ``config.yml``.
+
+At the same time a plaintext message is sent to the standard log, it can (optionally) be sent over the network in a structured format. This is described in the advanced topics section.
+
+Log redaction
+#############
+
+Sensitive data passed into a Reactor using the secrets mechanism are redacted automatically when logged. For instance, assume API credentials for AWS have been set in a Reactor. Under a standard logging scheme, it would be very easy to print those sensitive data in build logs, screenshots, commits, and such, where it could be easily discoverable.
+
+
+.. code-block:: pycon
+   :caption: Redaction in action
+
+    >>> r = Reactor()
+    >>> api_secret = r.settings.api.secret
+    >>> r.logger.info('Here are credentials: {}'.format(api_secret))
+    Pk4B11Q8Xxw INFO Here are credentials: ****
+    >>> api_url = r.settings.api.url
+    >>> r.logger.info('Here is API server: {}'.format(api_urk))
+    Pk4B11Q8Xxw INFO Here is API server: https://tacos.tacc.cloud/api/v1
+
 
 loggers
 -------
 
+This `dict` holds references to all loggers configured by a `Reactor`. At present, two loggers are established. The default logger, **screen**, prints to STDERR and (optionally) a log aggregator. The other logger, **slack**, allows logging directly to Slack assuming a webhook is provided when the actor is configured.
+
+.. code-block:: yaml
+   :caption: Slack logger configuration
+
+   ---
+   slack:
+     channel: "notifications"
+     icon_emoji: ":smile:"
+     username: "tacobot"
+     webhook: ~
+
+.. code-block:: pycon
+   :caption: Using loggers
+
+    >>> r = Reactor()
+    >>> r.loggers['screen'].info('This actor is a logger and a slacker')
+    5AB11Q8XxwPK5 INFO This actor is a logger and a slacker
+    >>> r.loggers['slack'].info('This actor is a logger and a slacker')
+
 nickname
 --------
+
+Inspired by the naming of Docker containers and other cloud resources, each Reactor invocation is assigned a "human meaningful, decentralized, secure" nickname generated by the `petname <https://pypi.org/project/petname/>`_ library. By default, two-word nicknames are used, but this can be overridden with an entry in `config.yml`
+
+.. code-block:: yaml
+
+   ---
+   nickname:
+     length: 3
+
+Example Usage
+^^^^^^^^^^^^^
+
+.. code-block:: pycon
+   :caption: View the current nickname
+
+    >>> r = Reactor()
+    >>> print(r.nickname)
+    sleepy-wallaby
 
 pemagent
 --------
 
+This is an instance of ``PemAgent``, a helper for recursive Agave files permissions management. Most permissions operations should be handled directly using AgavePy ``files.*Permissions`` commands. The **pemagent** helper exists provide an optimized, and potentially asynchronous, method for doing batch operations.
+
+Example Usage
+^^^^^^^^^^^^^
+
+.. code-block:: python
+   :caption: Let user ``tacopal`` read a specific directory
+
+    r = Reactor()
+    r.pemsagent.grant(systemId='data.tacc.cloud',
+                      absPath='/demo',
+                      username='tacopal',
+                      pem='READ')
+
 session
 -------
+
+This string is a correlation identifier among platform events with a common ancestry. Its value is set as follows:
+
+    1. If environment variable ``x-session`` is not empty, **session** takes on its value
+    2. Else, if environment variable ``SESSION`` is not empty, **session** takes on its value
+    3. Else, **session** is set to the value of **nickname**
+
+Critically, actors can message other actors. When this is done using ``Reactor.send_message``, the session value is forwarded along to the receipients as ``x-session`` and will thus become their session identifier.
+
+Example Usage
+^^^^^^^^^^^^^
+
+An Agave API job may send a string, such as job name or ID as **SESSION**, when messaging an Abaco actor. In this example, ``demojob`` is sent as a value for ``SESSION``.
+
+.. code-block:: json
+
+    { "notifications": [
+        {
+          "url": "https://api.tacc.cloud/actors/v2/eZE7XDPLzZOwo/messages?x-nonce=SD2E_KbyGjq4XOM4&channel=agavejobs&SESSION=demojob",
+          "event": "FINISHED",
+          "persistent": false
+        }
+    }
+
+The value of **session** in the downstream ``Reactor`` instance will be ``demojob``. If that Reactor messages another reactor, the downstream entity's session will also be ``demojob``.
+
 
 settings
 --------
